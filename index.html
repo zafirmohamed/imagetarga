@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>imagetarga</title>
+  <style>
+    body { margin: 0; }
+    #container { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+  </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/",
+      "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+    }
+  }
+  </script>
+</head>
+
+<body>
+  <div id="container"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { MindARThree } from 'mindar-image-three';
+
+    const start = async () => {
+      const mindarThree = new MindARThree({
+        container: document.querySelector('#container'),
+        imageTargetSrc: './targets.mind'
+      });
+      const { renderer, scene, camera } = mindarThree;
+
+      // Light
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1.5));
+
+      // Model load
+      const gltf = await new GLTFLoader().loadAsync('./model.glb');
+      const model = gltf.scene;
+      model.scale.set(0.5, 0.5, 0.5);   // size maathanum na inga
+      model.position.set(0, 0, 0);
+
+      // Image target (index 0) mela model vaikkurom
+      const anchor = mindarThree.addAnchor(0);
+      anchor.group.add(model);
+
+      // Animation play
+      let mixer;
+      if (gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(model);
+        mixer.clipAction(gltf.animations[0]).play();
+      }
+
+      const clock = new THREE.Clock();
+      await mindarThree.start();
+
+      renderer.setAnimationLoop(() => {
+        if (mixer) mixer.update(clock.getDelta());
+        renderer.render(scene, camera);
+      });
+    };
+
+    start();
+  </script>
+</body>
+</html>
