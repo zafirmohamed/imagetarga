@@ -7,6 +7,15 @@
   <style>
     body { margin: 0; }
     #container { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+
+    /* A) Start button style */
+    #startBtn {
+      position: absolute; z-index: 10;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      padding: 16px 28px; font-size: 18px;
+      border: none; border-radius: 12px;
+      background: #4f46e5; color: #fff;
+    }
   </style>
 
   <script type="importmap">
@@ -23,20 +32,23 @@
 <body>
   <div id="container"></div>
 
+  <!-- B) Start button -->
+  <button id="startBtn">Tap to Start AR</button>
+
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     import { MindARThree } from 'mindar-image-three';
 
     const start = async () => {
-    const mindarThree = new MindARThree({
-  container: document.querySelector('#container'),
-  imageTargetSrc: './targets.mind',
-  filterMinCF: 0.0001,   // kammi pannina shake kammi (delay konjam kooduum)
-  filterBeta: 10,        // kammi pannina smooth, perusa pannina fast follow
-  warmupTolerance: 10,   // 10 frame stable ah detect aana apram thaan model kaattum
-  missTolerance: 10      // tracking konjam miss aanaalum model maraiyaadhu
-});
+      const mindarThree = new MindARThree({
+        container: document.querySelector('#container'),
+        imageTargetSrc: './targets.mind',
+        filterMinCF: 0.0001,   // kammi pannina shake kammi (delay konjam kooduum)
+        filterBeta: 10,        // kammi pannina smooth, perusa pannina fast follow
+        warmupTolerance: 10,   // 10 frame stable ah detect aana apram thaan model kaattum
+        missTolerance: 10      // tracking konjam miss aanaalum model maraiyaadhu
+      });
       const { renderer, scene, camera } = mindarThree;
 
       // Light
@@ -46,7 +58,7 @@
       const gltf = await new GLTFLoader().loadAsync('./model.glb');
       const model = gltf.scene;
 
-      model.scale.set(1, 1, 1);   // size
+      model.scale.set(1, 1, 1);         // size
       model.rotation.x = Math.PI / 2;   // image mela nimirthi nikka vaikkum
 
       // Auto ah kaal ah image mela vaikkum, center la nikka vaikkum
@@ -69,6 +81,18 @@
         mixer.clipAction(gltf.animations[0]).play();
       }
 
+      // C) Audio
+      const audio = new Audio('./audio.mp3');
+      audio.loop = true;
+
+      anchor.onTargetFound = () => {
+        audio.currentTime = 0;   // modhalla irundhu play aaga
+        audio.play();
+      };
+      anchor.onTargetLost = () => {
+        audio.pause();
+      };
+
       const clock = new THREE.Clock();
       await mindarThree.start();
 
@@ -78,7 +102,16 @@
       });
     };
 
-    start();
+    // C) Tap pannina apram thaan start (mobile audio unlock ku)
+    document.querySelector('#startBtn').addEventListener('click', () => {
+      document.querySelector('#startBtn').style.display = 'none';
+
+      // Audio ah unlock pannum (mobile ku must)
+      const unlock = new Audio('./audio.mp3');
+      unlock.play().then(() => unlock.pause()).catch(() => {});
+
+      start();
+    });
   </script>
 </body>
 </html>
