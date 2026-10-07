@@ -29,10 +29,14 @@
     import { MindARThree } from 'mindar-image-three';
 
     const start = async () => {
-      const mindarThree = new MindARThree({
-        container: document.querySelector('#container'),
-        imageTargetSrc: './targets.mind'
-      });
+    const mindarThree = new MindARThree({
+  container: document.querySelector('#container'),
+  imageTargetSrc: './targets.mind',
+  filterMinCF: 0.0001,   // kammi pannina shake kammi (delay konjam kooduum)
+  filterBeta: 10,        // kammi pannina smooth, perusa pannina fast follow
+  warmupTolerance: 10,   // 10 frame stable ah detect aana apram thaan model kaattum
+  missTolerance: 10      // tracking konjam miss aanaalum model maraiyaadhu
+});
       const { renderer, scene, camera } = mindarThree;
 
       // Light
