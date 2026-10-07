@@ -41,8 +41,18 @@
       // Model load
       const gltf = await new GLTFLoader().loadAsync('./model.glb');
       const model = gltf.scene;
-      model.scale.set(0.5, 0.5, 0.5);   // size maathanum na inga
-      model.position.set(0, 0, 0);
+
+      model.scale.set(0.5, 0.5, 0.5);   // size
+      model.rotation.x = Math.PI / 2;   // image mela nimirthi nikka vaikkum
+
+      // Auto ah kaal ah image mela vaikkum, center la nikka vaikkum
+      model.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+
+      model.position.x -= center.x;   // left-right center
+      model.position.y -= center.y;   // up-down center
+      model.position.z -= box.min.z;  // kaal image surface la
 
       // Image target (index 0) mela model vaikkurom
       const anchor = mindarThree.addAnchor(0);
